@@ -1,6 +1,23 @@
-import Counter from "../islands/Counter.tsx";
+import { Handlers, PageProps } from "$fresh/server.ts";
 
-export default function Home() {
+type Pokemon = any;
+
+export const handler: Handlers<Pokemon | null> = {
+  async GET(_, ctx) {
+    const resp = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=100`);
+
+    if (resp.status === 404) {
+      return ctx.render(null);
+    }
+
+    const pokemon: Pokemon = await resp.json();
+    return ctx.render(pokemon);
+  },
+};
+
+export default function Home(props: PageProps<Pokemon | null>) {
+  const { data } = props;
+
   return (
     <div class="p-4 mx-auto max-w-screen-md">
       <img
@@ -8,11 +25,13 @@ export default function Home() {
         class="w-32 h-32"
         alt="the fresh logo: a sliced lemon dripping with juice"
       />
-      <p class="my-6">
-        Welcome to `fresh`. Try updating this message in the ./routes/index.tsx
-        file, and refresh.
-      </p>
-      <Counter start={3} />
+      <ul>
+        {data.results.map((pokemon: { name: string; url: string }) => {
+          return <li>{pokemon.name}</li>;
+        })}
+      </ul>
+      {data.previous && <a href={data.previous.split("?")[1]}>previous</a>}
+      {data.next && <a href={`?${data.next.split("?")[1]}`}>next</a>}
     </div>
   );
 }
