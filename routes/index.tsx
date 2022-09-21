@@ -1,10 +1,17 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 
-type Pokemon = any;
+// TODO: type this
+type PokeList = { name: string; url: string };
+type Pokemon = PokeList[];
 
 export const handler: Handlers<Pokemon | null> = {
   async GET(_, ctx) {
-    const resp = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=100`);
+    const offset = ctx.state.data || "";
+    const resp = await fetch(
+      `https://pokeapi.co/api/v2/pokemon?limit=100${
+        !offset ? "" : `&${offset}`
+      }`
+    );
 
     if (resp.status === 404) {
       return ctx.render(null);
@@ -26,11 +33,13 @@ export default function Home(props: PageProps<Pokemon | null>) {
         alt="the fresh logo: a sliced lemon dripping with juice"
       />
       <ul>
-        {data.results.map((pokemon: { name: string; url: string }) => {
+        {data.results.map((pokemon: PokeList) => {
           return <li>{pokemon.name}</li>;
         })}
       </ul>
-      {data.previous && <a href={data.previous.split("?")[1]}>previous</a>}
+      {data.previous && (
+        <a href={`?${data.previous.split("?")[1]}`}>previous</a>
+      )}
       {data.next && <a href={`?${data.next.split("?")[1]}`}>next</a>}
     </div>
   );

@@ -5,10 +5,14 @@ interface State {
 }
 
 export async function handler(
-  _req: Request,
+  req: Request,
   ctx: MiddlewareHandlerContext<State>
 ) {
-  ctx.state.data = "myData";
+  // TODO: this is horrible! :(
+  if (req.url.includes("?offset")) {
+    const [_url, offset] = req.url.split("?")[1];
+    ctx.state.data = offset;
+  }
   const resp = await ctx.next();
   resp.headers.set("server", "fresh server");
   return resp;
